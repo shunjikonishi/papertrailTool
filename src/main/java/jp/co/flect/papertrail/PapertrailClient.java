@@ -32,11 +32,15 @@ public class PapertrailClient {
 	
 	private String apiToken;
 	private HttpClient client;
+	private boolean keepAlive;
 	
 	public PapertrailClient(String apiToken) {
 		this.apiToken = apiToken;
 		client = new DefaultHttpClient();
 	}
+	
+	public boolean isKeepAlive() { return this.keepAlive;}
+	public void setKeepAlive(boolean b) { this.keepAlive = b;}
 	
 	public QueryResult query() throws IOException {
 		return query((String)null);
@@ -90,7 +94,10 @@ public class PapertrailClient {
 		}
 		HttpGet method = new HttpGet(buf.toString());
 		method.addHeader(API_HEADER, this.apiToken);
-		HttpResponse res = new DefaultHttpClient().execute(method);
+		if (this.keepAlive) {
+			method.addHeader("Connection", "keep-alive");
+		}
+		HttpResponse res = this.client.execute(method);
 		return EntityUtils.toString(res.getEntity(), "utf-8");
 	}
 	
@@ -134,6 +141,9 @@ public class PapertrailClient {
 		ResultWriter writer = new ResultWriter(output);
 		
 		PapertrailClient client = new PapertrailClient(apiKey);
+		if (date != null || tail) {
+			client.setKeepAlive(true);
+		}
 		QueryRequest request = new QueryRequest(query);
 		if (date != null) {
 			SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");

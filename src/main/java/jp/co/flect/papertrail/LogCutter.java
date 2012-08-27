@@ -33,12 +33,15 @@ public class LogCutter {
 		Time start = null;
 		Time end = null;
 		String filename = null;
+		OutputField of = null;
 		for (int i=0; i<args.length; i++) {
 			String s = args[i];
 			if (s.equals("-s") && i+1<args.length) {
 				start = Time.parse(args[++i]);
 			} else if (s.equals("-e") && i+1<args.length) {
 				end = Time.parse(args[++i]);
+			} else if (s.equals("-f") && i+1<args.length) {
+				of = new OutputField(args[++i]);
 			} else if (filename == null) {
 				filename = s;
 			}
@@ -55,7 +58,11 @@ public class LogCutter {
 			while (line != null) {
 				Event event = Event.fromTsv(line);
 				if (cutter.match(event)) {
-					System.out.println(line);
+					if (of == null) {
+						System.out.println(line);
+					} else {
+						System.out.println(of.toString(event));
+					}
 				}
 				line = r.readLine();
 			}
@@ -64,4 +71,44 @@ public class LogCutter {
 		}
 	}
 	
+	private static class OutputField {
+		
+		private boolean id;
+		private boolean receivedAt;
+		private boolean sourceId;
+		private boolean sourceName;
+		private boolean sourceIp;
+		private boolean facility;
+		private boolean severity;
+		private boolean program;
+		private boolean message;
+		
+		public OutputField(String str) {
+			this.id = str.indexOf('n') != -1;
+			this.receivedAt = str.indexOf('r') != -1;
+			this.sourceId = str.indexOf('s') != -1;
+			this.sourceName = str.indexOf('S') != -1;
+			this.sourceIp = str.indexOf('i') != -1;
+			this.facility = str.indexOf('f') != -1;
+			this.severity = str.indexOf('l') != -1;
+			this.program = str.indexOf('p') != -1;
+			this.message = str.indexOf('m') != -1;
+		}
+		
+		public String toString(Event event) {
+			StringBuilder buf = new StringBuilder();
+			if (this.id) buf.append(event.getId()).append("\t");
+			if (this.receivedAt) buf.append(event.getReceivedAt()).append("\t");
+			if (this.sourceId) buf.append(event.getSourceId()).append("\t");
+			if (this.sourceName) buf.append(event.getSourceName()).append("\t");
+			if (this.sourceIp) buf.append(event.getSourceIP()).append("\t");
+			if (this.facility) buf.append(event.getFacility()).append("\t");
+			if (this.severity) buf.append(event.getSeverity()).append("\t");
+			if (this.program) buf.append(event.getProgram()).append("\t");
+			if (this.message) buf.append(event.getMessage());
+			else buf.setLength(buf.length() - 1);
+			
+			return buf.toString();
+		}
+	}
 }

@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import jp.co.flect.papertrail.Counter;
+import jp.co.flect.papertrail.CounterItem;
+import jp.co.flect.papertrail.CounterRow;
 import jp.co.flect.papertrail.Event;
 import jp.co.flect.papertrail.HerokuAccessLog;
 import jp.co.flect.papertrail.ProgramComparator;
@@ -16,6 +19,8 @@ public class ResponseTimeCounter extends AbstractCounter {
 	public ResponseTimeCounter(String name) {
 		super(name);
 	}
+	
+	public Type getType() { return Type.Time;}
 	
 	public boolean match(Event e) {
 		return e.isAccessLog();
@@ -33,6 +38,17 @@ public class ResponseTimeCounter extends AbstractCounter {
 			this.map.put(name, counter);
 		}
 		counter.add(e);
+	}
+	
+	public List<CounterRow> getData() {
+		ArrayList<CounterRow> ret = new ArrayList<CounterRow>();
+		List<String> names = new ArrayList<String>(this.map.keySet());
+		Collections.sort(names);
+		for (String group : names) {
+			Counter counter = this.map.get(group);
+			ret.addAll(counter.getData());
+		}
+		return ret;
 	}
 	
 	public String toString(String prefix, String delimita) {

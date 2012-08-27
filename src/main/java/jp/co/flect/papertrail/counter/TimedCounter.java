@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import jp.co.flect.papertrail.Time;
 import jp.co.flect.papertrail.Event;
+import jp.co.flect.papertrail.CounterItem;
+import jp.co.flect.papertrail.CounterRow;
 
 public abstract class TimedCounter extends AbstractCounter {
 	
@@ -19,43 +21,17 @@ public abstract class TimedCounter extends AbstractCounter {
 		}
 	}
 	
-	public void add(Event event) {
-		Time time = event.getTime();
-		TimedCounterItem item = this.list.get(time.getHours());
-		item.count++;
-		
-		if (this.currentMin == null || !this.currentMin.time.sameMin(time)) {
-			this.currentMin = new TimedCounterItem(time);
-		}
-		if (this.currentSec == null || !this.currentSec.time.sameSec(time)) {
-			this.currentSec = new TimedCounterItem(time);
-		}
-		this.currentMin.count++;
-		this.currentSec.count++;
-		if (item.maxOfMinute < currentMin.count) {
-			item.maxOfMinute = currentMin.count;
-		}
-		if (item.maxOfSecond < currentSec.count) {
-			item.maxOfSecond = currentSec.count;
-		}
-	}
+	public Type getType() { return Type.Count;}
 	
-	public String toString(String prefix, String delimita) {
-		StringBuilder buf = new StringBuilder();
-		buf.append(prefix)
-			.append(getName())
-			.append(delimita);
-		int cnt = 0;
-		int min = 0;
-		int sec = 0;
-		for (TimedCounterItem item : this.list) {
-			buf.append(item.count)
-				.append(delimita)
-				.append(item.maxOfMinute)
-				.append(delimita)
-				.append(item.maxOfSecond)
-				.append(delimita);
-			cnt += item.count;
+	public List<CounterRow> getData() {
+		CounterItem[] items = new CounterItem[this.list.size()];
+		long cnt = 0;
+		long min = 0;
+		long sec = 0;
+		for (int i=0; i<this.list.size(); i++) {
+			TimedCounterItem item = this.list.get(i);
+			items[i] = item;
+			cnt += item.getCount();
 			if (min < item.maxOfMinute) {
 				min = item.maxOfMinute;
 			}
@@ -63,15 +39,58 @@ public abstract class TimedCounter extends AbstractCounter {
 				sec = item.maxOfSecond;
 			}
 		}
-		buf.append(cnt)
-			.append(delimita)
-			.append(min)
-			.append(delimita)
-			.append(sec);
+		CounterItem summaryItem = new TimedCounterItem(cnt, min, sec);
+		
+		ArrayList<CounterRow> ret = new ArrayList<CounterRow>();
+		ret.add(new CounterRow(getName(), items, summaryItem));
+		return ret;
+	}
+	
+	public void add(Event event) {
+		Time time = event.getTime();
+		TimedCounterItem item = this.list.get(time.getHours());
+		item.countUp();
+		
+		if (this.currentMin == null || !this.currentMin.time.sameMin(time)) {
+			this.currentMin = new TimedCounterItem(time);
+		}
+		if (this.currentSec == null || !this.currentSec.time.sameSec(time)) {
+			this.currentSec = new TimedCounterItem(time);
+		}
+		this.currentMin.countUp();
+		this.currentSec.countUp();
+		if (item.maxOfMinute < currentMin.getCount()) {
+			item.maxOfMinute = currentMin.getCount();
+		}
+		if (item.maxOfSecond < currentSec.getCount()) {
+			item.maxOfSecond = currentSec.getCount();
+		}
+	}
+	
+	public String toString(String prefix, String delimita) {
+		StringBuilder buf = new StringBuilder();
+		CounterRow row = getData().get(0);
+		buf.append(prefix)
+			.append(getName())
+			.append(delimita);
+		for (int i=0; i<row.getItemCount(); i++) {
+			long[] nums = row.getItem(i).getNumbers();
+			for (int j=0; j<nums.length; j++) {
+				buf.append(nums[j]).append(delimita);
+			}
+		}
+		long[] nums = row.getSummaryItem().getNumbers();
+		buf.append(nums[0]).append(delimita)
+			.append(nums[1]).append(delimita)
+			.append(nums[2]);
 		return buf.toString();
 	}
 	
-	private static class TimedCounterItem {
+	public static class TimedCounterItem extends CounterItem {
+		
+		private Time time;
+		private long maxOfMinute;
+		private long maxOfSecond;
 		
 		public TimedCounterItem(int hour) {
 			this.time = new Time(hour, 0, 0);
@@ -81,10 +100,22 @@ public abstract class TimedCounter extends AbstractCounter {
 			this.time = time;
 		}
 		
-		public Time time;
-		public int count;
-		public int maxOfMinute;
-		public int maxOfSecond;
+		public TimedCounterItem(long count, long min, long sec) {
+			super(count);
+			this.maxOfMinute = min;
+			this.maxOfSecond = sec;
+		}
+		
+		public long getMaxOfMinute() { return this.maxOfMinute;}
+		public long getMaxOfSecond() { return this.maxOfSecond;}
+		
+		public long[] getNumbers() {
+			long[] ret = new long[3];
+			ret[0] = getCount();
+			ret[1] = getMaxOfMinute();
+			ret[2] = getMaxOfSecond();
+			return ret;
+		}
 	}
 	
 }
