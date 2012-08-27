@@ -31,6 +31,8 @@ Download papertrail archive from S3.
 ## PapertrailClient
 Wrapper class of Papertrail API.
 
+---
+
 Papertrailツール
 ================
 Papertrailのログを扱うためのライブラリとアプリケーションです。
@@ -116,7 +118,7 @@ Herokuのログ解析を行うアプリケーションです。
 切り取り結果はコンソールに出力されます。
 
 
-*** S3
+## S3
 Download papertrail archive from S3.
 
     Usage:
