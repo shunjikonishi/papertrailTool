@@ -119,10 +119,9 @@ Herokuのログ解析を行うアプリケーションです。
 
 
 ## S3
-Download papertrail archive from S3.
+S3からログをダウンロードします。(gzの解凍も同時に行われます。)  
 
     Usage:
       s3 AWS-ACCESSKEY AWS-SECRETKEY S3-BUCKET [[yyyy-]MM-]dd [OUTPUT-FILE]
 
-S3からログをダウンロードします。(gzの解凍も同時に行われます。)  
 出力ファイル名を省略した場合は「<日付>.log」というファイル名になります。
