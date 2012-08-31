@@ -113,6 +113,20 @@
 						</configuration>
 					</execution>
 					<execution>
+						<id>pt-s</id>
+						<phase>package</phase>
+						<goals><goal>assemble</goal></goals>
+						<configuration>
+							<assembleDirectory>target</assembleDirectory>
+							<programs>
+								<program>
+									<mainClass>jp.co.flect.papertrail.StressAnalyzer</mainClass>
+									<name>pt-s</name>
+								</program>
+							</programs>
+						</configuration>
+					</execution>
+					<execution>
 						<id>s3</id>
 						<phase>package</phase>
 						<goals><goal>assemble</goal></goals>

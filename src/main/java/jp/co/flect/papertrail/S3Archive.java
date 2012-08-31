@@ -100,6 +100,7 @@ public class S3Archive {
 				year = strs[0];
 				month = strs[1];
 				day = strs[2];
+				break;
 			default:
 				throw new IllegalArgumentException(s);
 		}

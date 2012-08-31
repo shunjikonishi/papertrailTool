@@ -61,6 +61,7 @@ public class HerokuAccessLog {
 	public String getMethods() { return this.method;}
 	public String getHost() { return this.host;}
 	public String getPath() { return this.path;}
+	public String getQuery() { return this.query;}
 	public String getDyno() { return this.dyno;}
 	public int getQueue() { return this.queue;}
 	public int getWait() { return this.wait;}

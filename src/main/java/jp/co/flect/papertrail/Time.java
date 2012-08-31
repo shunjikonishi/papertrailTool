@@ -1,6 +1,6 @@
 package jp.co.flect.papertrail;
 
-public class Time {
+public class Time implements Comparable<Time> {
 	
 	private int hour;
 	private int min;
@@ -28,16 +28,17 @@ public class Time {
 		if (this.hour < 10) {
 			buf.append("0");
 		}
-		buf.append(this.hour);
+		buf.append(this.hour).append(":");
 		if (this.min < 10) {
 			buf.append("0");
 		}
-		buf.append(this.min);
+		buf.append(this.min).append(":");
 		if (this.sec < 10) {
 			buf.append("0");
 		}
 		buf.append(this.sec);
 		if (this.millis > 0) {
+			buf.append(".");
 			if (this.millis < 10) {
 				buf.append("00");
 			} else if (this.millis < 100) {
@@ -57,6 +58,14 @@ public class Time {
 		return t.hour == this.hour &&
 			t.min == this.min &&
 			t.sec == this.sec;
+	}
+	
+	public int compareTo(Time time) {
+		return getTime() - time.getTime();
+	}
+	
+	public int hashCode() {
+		return toString().hashCode();
 	}
 	
 	public boolean equals(Object o) {
@@ -85,6 +94,31 @@ public class Time {
 		return this.sec == 0 && this.millis == 0 ? this : new Time(this.hour, this.min, 0);
 	}
 	
+	public Time nextMin() {
+		int h = this.hour;
+		int m = this.min + 1;
+		if (m >= 60) {
+			h++;
+			m -= 60;
+		}
+		return new Time(h, m, 0);
+	}
+	
+	public Time nextSec() {
+		int h = this.hour;
+		int m = this.min;
+		int s = this.sec + 1;
+		if (s >= 60) {
+			m++;
+			s -= 60;
+		}
+		if (m >= 60) {
+			h++;
+			m -= 60;
+		}
+		return new Time(h, m, s);
+	}
+	
 	public static Time parse(String str) {
 		int h = 0;
 		int m = 0;
@@ -103,6 +137,9 @@ public class Time {
 				h = Integer.parseInt(strs[0]);
 				m = Integer.parseInt(strs[1]);
 				int idx = strs[2].indexOf('.');
+				if (idx == -1) {
+					idx = strs[2].indexOf(',');
+				}
 				if (idx == -1) {
 					s = Integer.parseInt(strs[2]);
 				} else {

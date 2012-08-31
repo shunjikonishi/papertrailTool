@@ -392,6 +392,7 @@ public class LogAnalyzer {
 		if (file == null) {
 			System.out.println(analyzer);
 		} else {
+System.out.println("test: " + file);
 			analyzer.saveToFile(file, parser.getSheetName());
 		}
 	}
