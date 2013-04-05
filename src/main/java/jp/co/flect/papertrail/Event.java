@@ -67,6 +67,7 @@ public class Event {
 			try {
 				this.accessLog = new HerokuAccessLog(this.message);
 			} catch (RuntimeException e) {
+				e.printStackTrace();
 				return null;
 			}
 		}
