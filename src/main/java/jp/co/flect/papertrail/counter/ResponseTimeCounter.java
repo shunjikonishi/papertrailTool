@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 import jp.co.flect.papertrail.Counter;
 import jp.co.flect.papertrail.CounterItem;
 import jp.co.flect.papertrail.CounterRow;
@@ -15,6 +16,7 @@ import jp.co.flect.papertrail.ProgramComparator;
 public class ResponseTimeCounter extends AbstractCounter {
 	
 	private Map<String, TimedResponseTimeCounter> map = new HashMap<String, TimedResponseTimeCounter>();
+	private List<Pattern> patternList = new ArrayList<Pattern>();
 	
 	public ResponseTimeCounter(String name) {
 		super(name);
@@ -26,12 +28,26 @@ public class ResponseTimeCounter extends AbstractCounter {
 		return e.isAccessLog();
 	}
 	
+	public void addPattern(String pattern) {
+		this.patternList.add(Pattern.compile(pattern));
+	}
+	
+	private String normalize(String path) {
+		for (Pattern p : patternList) {
+			if (p.matcher(path).matches()) {
+				return p.pattern();
+			}
+		}
+		return path;
+	}
+	
 	public void add(Event e) {
 		HerokuAccessLog log = e.getAccessLog();
 		if (log == null) {
 			return;
 		}
 		String name = log.isError() ? log.getError() : log.getPath();
+		name = normalize(name);
 		TimedResponseTimeCounter counter = this.map.get(name);
 		if (counter == null) {
 			counter = new TimedResponseTimeCounter(name);

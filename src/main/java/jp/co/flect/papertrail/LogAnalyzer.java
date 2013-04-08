@@ -16,10 +16,6 @@ import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 import java.text.MessageFormat;
 
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
-
 import jp.co.flect.papertrail.counter.AccessCounter;
 import jp.co.flect.papertrail.counter.AllLogCounter;
 import jp.co.flect.papertrail.counter.ClientErrorCounter;
@@ -69,26 +65,14 @@ public class LogAnalyzer {
 		return buf.toString();
 	}
 	
-	public void saveToFile(File file, String sheetName) throws IOException, InvalidFormatException {
+	public void saveToFile(File file, String sheetName) throws IOException {
 		if (!file.exists()) {
 			copyTemplate(file);
 		}
-		Workbook workbook = null;
-		FileInputStream is = new FileInputStream(file);
-		try {
-			workbook = WorkbookFactory.create(is);
-		} finally {
-			is.close();
-		}
-		ExcelWriter writer = new ExcelWriter(workbook, workbook.getSheet("Template"));
-		writer.write(this, sheetName);
 		
-		FileOutputStream os = new FileOutputStream(file);
-		try {
-			workbook.write(os);
-		} finally {
-			os.close();
-		}
+		ExcelWriter writer = new ExcelWriter(file, "Template");
+		writer.write(this, sheetName);
+		writer.saveToFile(file);
 	}
 	
 	private void copyTemplate(File file) throws IOException {
@@ -130,7 +114,7 @@ public class LogAnalyzer {
 				switch (args.length) {
 					case 1:
 						threshold = Integer.parseInt(args[0]);
-						name = MessageFormat.format(getDefaultName(), threshold);
+						name = MessageFormat.format(getDefaultName(), Integer.toString(threshold));
 						break;
 					case 2:
 						name = args[0];
@@ -177,9 +161,19 @@ public class LogAnalyzer {
 				return new HerokuErrorCounter(getName(args));
 			}
 		});
-		factoryMap.put("-rt", new CounterFactory(Resource.RESPONSE_TIME, 1) {
+		factoryMap.put("-rt", new CounterFactory(Resource.RESPONSE_TIME, Integer.MAX_VALUE) {
 			protected Counter doCreate(String[] args) {
-				return new ResponseTimeCounter(getName(args));
+				boolean nameFirst = args.length > 0 && args[0].indexOf("/") == -1;
+				String name = nameFirst ? args[0] : Resource.RESPONSE_TIME;
+				ResponseTimeCounter ret = new ResponseTimeCounter(name);
+				for (String pattern : args) {
+					if (nameFirst) {
+						nameFirst = false;
+					} else {
+						ret.addPattern(pattern);
+					}
+				}
+				return ret;
 			}
 		});
 		factoryMap.put("-rg", new CounterFactory(Resource.REGEX_GROUP, 2) {
@@ -365,17 +359,13 @@ public class LogAnalyzer {
 		System.err.println("Usage: java jp.co.flect.papertrail.LogAnalyzer [OPTIONS] -f filename");
 	}
 	
-	public static void main(String[] args) throws Exception {
-		String filename = null;
-		LogAnalyzer analyzer = new LogAnalyzer();
-		ArgumentParser parser = new ArgumentParser(args);
+	private static boolean process(LogAnalyzer analyzer, ArgumentParser parser) throws IOException {
 		for (Counter c = parser.nextCounter(); c != null; c = parser.nextCounter()) {
 			analyzer.add(c);
 		}
 		InputStream is = parser.getInputStream();
 		if (is == null) {
-			printUsage();
-			return;
+			return false;
 		}
 		BufferedReader r = new BufferedReader(new InputStreamReader(is, "utf-8"));
 		try {
@@ -388,11 +378,26 @@ public class LogAnalyzer {
 		} finally {
 			r.close();
 		}
+		return true;
+	}
+	
+	public static LogAnalyzer process(String[] args) throws IOException {
+		LogAnalyzer analyzer = new LogAnalyzer();
+		ArgumentParser parser = new ArgumentParser(args);
+		return process(analyzer, parser) ? analyzer : null;
+	}
+	
+	public static void main(String[] args) throws Exception {
+		LogAnalyzer analyzer = new LogAnalyzer();
+		ArgumentParser parser = new ArgumentParser(args);
+		if (!process(analyzer, parser)) {
+			printUsage();
+			return;
+		}
 		File file = parser.getExcelFile();
 		if (file == null) {
 			System.out.println(analyzer);
 		} else {
-System.out.println("test: " + file);
 			analyzer.saveToFile(file, parser.getSheetName());
 		}
 	}

@@ -1,11 +1,17 @@
 package jp.co.flect.papertrail.excel;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.List;
 
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 
 import jp.co.flect.papertrail.LogAnalyzer;
 import jp.co.flect.papertrail.Counter;
@@ -16,6 +22,21 @@ public class ExcelWriter {
 	
 	private Workbook workbook;
 	private Sheet templateSheet;
+	
+	public ExcelWriter(File file, String sheetName) throws IOException {
+		FileInputStream is = new FileInputStream(file);
+		try {
+			this.workbook = WorkbookFactory.create(is);
+		} catch (InvalidFormatException e) {
+			throw new IOException(e);
+		} finally {
+			is.close();
+		}
+		this.templateSheet = this.workbook.getSheet(sheetName);
+		if (this.templateSheet == null) {
+			throw new IllegalArgumentException(sheetName);
+		}
+	}
 	
 	public ExcelWriter(Workbook workbook, Sheet templateSheet) {
 		this.workbook = workbook;
@@ -44,6 +65,15 @@ public class ExcelWriter {
 					write("    ", items, sheet.createRow(rowIndex++));
 				}
 			}
+		}
+	}
+	
+	public void saveToFile(File file) throws IOException {
+		FileOutputStream os = new FileOutputStream(file);
+		try {
+			this.workbook.write(os);
+		} finally {
+			os.close();
 		}
 	}
 	
