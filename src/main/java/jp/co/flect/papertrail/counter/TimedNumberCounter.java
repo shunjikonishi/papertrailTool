@@ -11,24 +11,20 @@ import jp.co.flect.papertrail.HerokuAccessLog;
 import jp.co.flect.papertrail.ProgramComparator;
 import java.math.BigInteger;
 
-public class TimedResponseTimeCounter extends AbstractCounter {
+public abstract class TimedNumberCounter extends AbstractCounter {
 	
-	private List<ResponseTimeCounterItem> list = new ArrayList<ResponseTimeCounterItem>();
+	private List<NumberCounterItem> list = new ArrayList<NumberCounterItem>();
 	
-	public TimedResponseTimeCounter(String name) {
+	public TimedNumberCounter(String name) {
 		super(name);
 		for (int i=0; i<24; i++) {
-			list.add(new ResponseTimeCounterItem());
+			list.add(new NumberCounterItem());
 		}
 	}
 	
 	public Type getType() { return Type.Time;}
 	
-	public boolean match(Event e) {
-		return e.isAccessLog();
-	}
-	
-	public ResponseTimeCounterItem getItem(Time time) {
+	public NumberCounterItem getItem(Time time) {
 		return this.list.get(time.getHours());
 	}
 	
@@ -38,7 +34,7 @@ public class TimedResponseTimeCounter extends AbstractCounter {
 		int max = 0;
 		BigInteger sum = BigInteger.ZERO;
 		for (int i=0; i<this.list.size(); i++) {
-			ResponseTimeCounterItem item = this.list.get(i);
+			NumberCounterItem item = this.list.get(i);
 			items[i] = item;
 			cnt += item.getCount();
 			if (item.getMax() > max) {
@@ -62,14 +58,6 @@ public class TimedResponseTimeCounter extends AbstractCounter {
 		return ret;
 	}
 	
-	public void add(Event e) {
-		HerokuAccessLog log = e.getAccessLog();
-		if (log != null) {
-			ResponseTimeCounterItem item = list.get(e.getTime().getHours());
-			item.add(log);
-		}
-	}
-	
 	public String toString(String prefix, String delimita) {
 		StringBuilder buf = new StringBuilder();
 		CounterRow row = getData().get(0);
@@ -89,7 +77,7 @@ public class TimedResponseTimeCounter extends AbstractCounter {
 		return buf.toString();
 	}
 	
-	public static class ResponseTimeCounterItem extends CounterItem {
+	public static class NumberCounterItem extends CounterItem {
 		
 		private int max;
 		private long sum;
@@ -97,10 +85,6 @@ public class TimedResponseTimeCounter extends AbstractCounter {
 		public int getMax() { return this.max;}
 		public long getSum() { return this.sum;}
 		public int getAverage() { return getCount() == 0 ? 0 : (int)(this.sum / getCount());}
-		
-		public void add(HerokuAccessLog log) {
-			add(log.getService());
-		}
 		
 		public void add(int time) {
 			countUp();

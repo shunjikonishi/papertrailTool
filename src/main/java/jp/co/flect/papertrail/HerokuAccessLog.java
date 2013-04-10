@@ -5,18 +5,12 @@ import java.util.HashMap;
 
 public class HerokuAccessLog {
 	
-	private String at;
-	private String method;
-	private String path;
-	private String query;
-	private String host;
-	private String fwd;
-	private String dyno;
+	private Map<String, String> map;
 	private int connect;
 	private int service;
 	private int status;
 	private int bytes;
-	private String error;
+	private boolean error;
 	
 	private static int parseInt(String str, boolean ms) {
 		if (str == null || str.length() == 0) {
@@ -33,29 +27,24 @@ public class HerokuAccessLog {
 	}
 	
 	private void parse(String msg) {
-		if (msg.startsWith("Error ")) {
-			int idx = msg.indexOf("->");
+		this.map = toMap(msg);
+		String path = map.get("path");
+		if (path != null) {
+			int idx = path.indexOf('?');
 			if (idx != -1) {
-				this.error = msg.substring(5, idx).trim();
-				msg = msg.substring(idx + 2).trim();
+				String query = path.substring(idx + 1);
+				path = path.substring(0, idx);
+				map.put("path", path);
+				map.put("query", query);
 			}
+			
 		}
-		Map<String, String> map = toMap(msg);
-		this.at = map.get("at");
-		this.method = map.get("method");
-		this.path = map.get("path");
-		if (this.path != null && this.path.indexOf('?') != -1) {
-			int idx = this.path.indexOf('?');
-			this.query = this.path.substring(idx + 1);
-			this.path = this.path.substring(0, idx);
-		}
-		this.host = map.get("host");
-		this.fwd = map.get("fwd");
-		this.dyno = map.get("dyno");
 		this.connect = parseInt(map.get("connect"), true);
 		this.service = parseInt(map.get("service"), true);
 		this.status = parseInt(map.get("status"), false);
 		this.bytes = parseInt(map.get("bytes"), false);
+		
+		this.error = "error".equals(map.get("at"));
 	}
 	
 	private Map<String, String> toMap(String msg) {
@@ -88,18 +77,19 @@ public class HerokuAccessLog {
 		return map;
 	}
 	
-	public String getAt() { return this.at;}
-	public String getMethod() { return this.method;}
-	public String getPath() { return this.path;}
-	public String getQuery() { return this.query;}
-	public String getHost() { return this.host;}
-	public String getFwd() { return this.fwd;}
-	public String getDyno() { return this.dyno;}
+	public String getAt() { return map.get("at");}
+	public String getMethod() { return map.get("method");}
+	public String getPath() { return map.get("path");}
+	public String getQuery() { return map.get("query");}
+	public String getHost() { return map.get("host");}
+	public String getFwd() { return map.get("fwd");}
+	public String getDyno() { return map.get("dyno");}
 	public int getConnect() { return this.connect;}
 	public int getService() { return this.service;}
 	public int getStatus() { return this.status;}
 	public int getBytes() { return this.bytes;}
 	
-	public String getError() { return this.error;}
-	public boolean isError() { return this.error != null;}
+	public String getCode() { return map.get("code");}
+	public String getError() { return map.get("desc");}
+	public boolean isError() { return this.error;}
 }

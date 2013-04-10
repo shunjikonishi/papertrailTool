@@ -21,15 +21,21 @@ public class S3Archive {
 	private String accessKey;
 	private String secretKey;
 	private String bucket;
+	private String directory;
 	
 	public S3Archive(String accessKey, String secretKey, String bucket) {
+		this(accessKey, secretKey, bucket, "papertrail/logs");
+	}
+	
+	public S3Archive(String accessKey, String secretKey, String bucket, String directory) {
 		this.accessKey = accessKey;
 		this.secretKey = secretKey;
 		this.bucket = bucket;
+		this.directory = directory;
 	}
 	
 	private String getLogPath(String dateStr) {
-		return "papertrail/logs/dt=" + dateStr + "/" + dateStr + ".tsv.gz";
+		return directory + "/dt=" + dateStr + "/" + dateStr + ".tsv.gz";
 	}
 	
 	public InputStream getDailyArchive(Date date) throws IOException {
@@ -114,19 +120,20 @@ public class S3Archive {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		if (args.length < 4) {
-			System.err.println("Usage: s3 AWS-ACCESSKEY AWS-SECRETKEY S3-BUCKET [[yyyy-]MM-]dd [OUTPUT-FILE]");
+		if (args.length < 5) {
+			System.err.println("Usage: s3 AWS-ACCESSKEY AWS-SECRETKEY S3-BUCKET DIRECTORY [[yyyy-]MM-]dd [OUTPUT-FILE]");
 			return;
 		}
 		String accessKey = args[0];
 		String secretKey = args[1];
 		String bucket = args[2];
-		String dateStr = getDateStr(args[3]);
-		String outputFile = args.length > 4 ? args[4] : null;
+		String dir = args[3];
+		String dateStr = getDateStr(args[4]);
+		String outputFile = args.length > 5 ? args[5] : null;
 		if (outputFile == null) {
 			outputFile = dateStr + ".log";
 		}
-		S3Archive s3 = new S3Archive(accessKey, secretKey, bucket);
+		S3Archive s3 = new S3Archive(accessKey, secretKey, bucket, dir);
 		s3.saveToFile(dateStr, true, new File(outputFile));
 	}
 }

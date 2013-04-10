@@ -4,16 +4,15 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import jp.co.flect.papertrail.Event;
 
-public class RegexTimeCounter extends TimedResponseTimeCounter {
+public class RegexNumberCounter extends TimedNumberCounter {
 	
 	private Pattern pattern;
 	
-	public RegexTimeCounter(String name, String regex) {
+	public RegexNumberCounter(String name, String regex) {
 		super(name);
 		this.pattern = Pattern.compile(regex);
 	}
 	
-	@Override
 	public boolean match(Event e) {
 		Matcher m = this.pattern.matcher(e.getMessage());
 		return m.find() && m.groupCount() > 0;
@@ -25,7 +24,7 @@ public class RegexTimeCounter extends TimedResponseTimeCounter {
 			String group = m.group(1);
 			try {
 				int n = Integer.parseInt(group);
-				ResponseTimeCounterItem item = getItem(e.getTime());
+				NumberCounterItem item = getItem(e.getTime());
 				item.add(n);
 			} catch (NumberFormatException ex) {
 			}

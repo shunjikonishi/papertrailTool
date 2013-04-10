@@ -25,10 +25,12 @@ import jp.co.flect.papertrail.counter.PathCounter;
 import jp.co.flect.papertrail.counter.PatternCounter;
 import jp.co.flect.papertrail.counter.ProgramCounter;
 import jp.co.flect.papertrail.counter.RegexGroupCounter;
-import jp.co.flect.papertrail.counter.RegexTimeCounter;
+import jp.co.flect.papertrail.counter.RegexNumberCounter;
 import jp.co.flect.papertrail.counter.ResponseTimeCounter;
 import jp.co.flect.papertrail.counter.ServerErrorCounter;
 import jp.co.flect.papertrail.counter.SlowRequestCounter;
+import jp.co.flect.papertrail.counter.SlowConnectCounter;
+import jp.co.flect.papertrail.counter.ConnectTimeCounter;
 import jp.co.flect.papertrail.excel.ExcelWriter;
 
 public class LogAnalyzer {
@@ -61,6 +63,20 @@ public class LogAnalyzer {
 		StringBuilder buf = new StringBuilder();
 		for (Counter c : this.list) {
 			buf.append(c.toString("", delimita)).append("\n");
+		}
+		return buf.toString();
+	}
+	
+	public String toString(Counter.Type type) {
+		return toString(type, ",");
+	}
+	
+	public String toString(Counter.Type type, String delimita) {
+		StringBuilder buf = new StringBuilder();
+		for (Counter c : this.list) {
+			if (c.getType() == type) {
+				buf.append(c.toString("", delimita)).append("\n");
+			}
 		}
 		return buf.toString();
 	}
@@ -124,6 +140,25 @@ public class LogAnalyzer {
 						throw new IllegalStateException();
 				}
 				return new SlowRequestCounter(name, threshold);
+			}
+		});
+		factoryMap.put("-sc", new CounterFactory(Resource.SLOW_CONNECT, 2) {
+			protected Counter doCreate(String[] args) {
+				String name = null;
+				int threshold = 0;
+				switch (args.length) {
+					case 1:
+						threshold = Integer.parseInt(args[0]);
+						name = MessageFormat.format(getDefaultName(), Integer.toString(threshold));
+						break;
+					case 2:
+						name = args[0];
+						threshold = Integer.parseInt(args[1]);
+						break;
+					default:
+						throw new IllegalStateException();
+				}
+				return new SlowConnectCounter(name, threshold);
 			}
 		});
 		factoryMap.put("-rp", new CounterFactory(null, 2) {
@@ -203,7 +238,12 @@ public class LogAnalyzer {
 				}
 				String name = args[0];
 				String pattern = args.length == 2 ? args[1] : name;
-				return new RegexTimeCounter(name, pattern);
+				return new RegexNumberCounter(name, pattern);
+			}
+		});
+		factoryMap.put("-ct", new CounterFactory(Resource.CONNECT_TIME, 1) {
+			protected Counter doCreate(String[] args) {
+				return new ConnectTimeCounter(getName(args));
 			}
 		});
 	}
@@ -264,8 +304,8 @@ public class LogAnalyzer {
 				}
 				return nextCounter();
 			} else if (s.equals("-s3")) {
-				if (idx + 3 < args.length) {
-					this.s3 = new S3Archive(args[idx++], args[idx++], args[idx++]);
+				if (idx + 4 < args.length) {
+					this.s3 = new S3Archive(args[idx++], args[idx++], args[idx++], args[idx++]);
 					this.s3dateStr = S3Archive.getDateStr(args[idx++]);
 				} else {
 					throw new IllegalArgumentException("S3 infomation is not specified.");
@@ -283,12 +323,14 @@ public class LogAnalyzer {
 				this.allCounters.add(factoryMap.get("-al").create());
 				this.allCounters.add(factoryMap.get("-ac").create());
 				this.allCounters.add(factoryMap.get("-sl").create("1000"));
+				this.allCounters.add(factoryMap.get("-sc").create("20"));
 				this.allCounters.add(factoryMap.get("-ce").create());
 				this.allCounters.add(factoryMap.get("-se").create());
 				this.allCounters.add(factoryMap.get("-ds").create());
 				this.allCounters.add(factoryMap.get("-pg").create());
 				this.allCounters.add(factoryMap.get("-he").create());
 				this.allCounters.add(factoryMap.get("-rt").create());
+				this.allCounters.add(factoryMap.get("-ct").create());
 				return nextCounter();
 			} else if (s.startsWith("-")) {
 				CounterFactory factory = factoryMap.get(s);

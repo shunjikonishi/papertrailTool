@@ -15,7 +15,7 @@ import jp.co.flect.papertrail.Event;
 public class RegexGroupCounter extends AbstractCounter {
 	
 	private Pattern pattern;
-	private Map<String, Counter> map = new HashMap<String, Counter>();
+	protected Map<String, Counter> map = new HashMap<String, Counter>();
 	
 	public RegexGroupCounter(String name, String regex) {
 		super(name);

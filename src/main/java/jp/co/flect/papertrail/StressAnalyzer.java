@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
-import jp.co.flect.papertrail.counter.TimedResponseTimeCounter.ResponseTimeCounterItem;
+import jp.co.flect.papertrail.counter.TimedNumberCounter.NumberCounterItem;
 
 public class StressAnalyzer {
 	
@@ -124,13 +124,12 @@ public class StressAnalyzer {
 		}
 	}
 	
-	private class Item extends ResponseTimeCounterItem {
+	private class Item extends NumberCounterItem {
 		
 		private Map<Integer, Integer> statusMap = new HashMap<Integer, Integer>();
 		
-		@Override
 		public void add(HerokuAccessLog log) {
-			super.add(log);
+			super.add(log.getService());
 			int status = log.getStatus();
 			Integer n = statusMap.get(status);
 			if (n == null) {

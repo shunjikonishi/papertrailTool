@@ -10,6 +10,8 @@ public class Resource {
 	public static final String ACCESS_LOG_HELP;
 	public static final String SLOW_REQUEST;
 	public static final String SLOW_REQUEST_HELP;
+	public static final String SLOW_CONNECT;
+	public static final String SLOW_CONNECT_HELP;
 	public static final String PATH;
 	public static final String PATH_HELP;
 	public static final String CLIENT_ERROR;
@@ -30,6 +32,10 @@ public class Resource {
 	public static final String PATTERN_HELP;
 	public static final String REGEX_NUMBER;
 	public static final String REGEX_NUMBER_HELP;
+	public static final String CONNECT_TIME;
+	public static final String CONNECT_TIME_HELP;
+	
+	public static final String ALL_ACCESS;
 	
 	static {
 		boolean b = "ja".equals(Locale.getDefault().getLanguage());
@@ -51,7 +57,13 @@ public class Resource {
 			"Slow Request(More than {0}ms)";
 		SLOW_REQUEST_HELP = b ? 
 			"指定の時間以上かかったアクセスログをカウントします。： [NAME] TIME(ms)" : 
-			"Count access logs that took more than specified time. : [NAME] TIME(ms)";
+			"Count access logs that took more than specified time for response. : [NAME] TIME(ms)";
+		SLOW_CONNECT = b ? 
+			"接続に{0}ms以上かかったリクエスト" : 
+			"Slow Connect(More than {0}ms)";
+		SLOW_CONNECT_HELP = b ? 
+			"接続に指定の時間以上かかったアクセスログをカウントします。： [NAME] TIME(ms)" : 
+			"Count access logs that took more than specified time for connect. : [NAME] TIME(ms)";
 		PATH = b ? 
 			"パス" : 
 			"Path";
@@ -111,6 +123,15 @@ public class Resource {
 			"Regex Number";
 		REGEX_NUMBER_HELP = b ? 
 			"正規表現でグループ指定された数値の件数、最大値、平均値をカウントします。： [NAME] PATTERN" : 
-			"Count, Max, Average by specified regex pattern. : [NAME] PATTERN";
+			"Count, Max and Average by specified regex pattern. : [NAME] PATTERN";
+		CONNECT_TIME = b ? 
+			"接続時間" : 
+			"Connect time";
+		CONNECT_TIME_HELP = b ? 
+			"接続時間の件数、最大値、平均値をカウントします。" : 
+			"Count, Max and  Average by connection time.";
+		ALL_ACCESS = b ? 
+			"すべてのアクセス" : 
+			"All Access";
 	}
 }
