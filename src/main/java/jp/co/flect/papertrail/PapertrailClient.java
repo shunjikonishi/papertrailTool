@@ -238,28 +238,28 @@ public class PapertrailClient {
 	
 	private static class ResultWriter {
 		
-		private boolean outputSeverity   = false;//Sv
-		private boolean outputHostName   = false;//H
-		private boolean outputSourceName = false;//Sn
-		private boolean outputSourceId   = false;//Si
-		private boolean outputMessage    = true; //M
-		private boolean outputProgram    = true; //P
-		private boolean outputSourceIP   = false;//Sp
-		private boolean outputReceivedAt = true; //R
-		private boolean outputId         = false;//I
-		private boolean outputFacility   = false;//F
+		private boolean outputSeverity    = false;//Sv
+		private boolean outputGeneratedAt = true; //G
+		private boolean outputSourceName  = false;//Sn
+		private boolean outputSourceId    = false;//Si
+		private boolean outputMessage     = true; //M
+		private boolean outputProgram     = true; //P
+		private boolean outputSourceIP    = false;//Sp
+		private boolean outputReceivedAt  = false;//R
+		private boolean outputId          = false;//I
+		private boolean outputFacility    = false;//F
 		
 		public ResultWriter(String str) {
-			this.outputSeverity   = str.indexOf("Sv") != -1;
-			this.outputHostName   = str.indexOf("H") != -1;
-			this.outputSourceName = str.indexOf("Sn") != -1;
-			this.outputSourceId   = str.indexOf("Si") != -1;
-			this.outputMessage    = str.indexOf("M") != -1;
-			this.outputProgram    = str.indexOf("P") != -1;
-			this.outputSourceIP   = str.indexOf("Sp") != -1;
-			this.outputReceivedAt = str.indexOf("R") != -1;
-			this.outputId         = str.indexOf("I") != -1;
-			this.outputFacility   = str.indexOf("F") != -1;
+			this.outputSeverity    = str.indexOf("Sv") != -1;
+			this.outputGeneratedAt = str.indexOf("G") != -1;
+			this.outputSourceName  = str.indexOf("Sn") != -1;
+			this.outputSourceId    = str.indexOf("Si") != -1;
+			this.outputMessage     = str.indexOf("M") != -1;
+			this.outputProgram     = str.indexOf("P") != -1;
+			this.outputSourceIP    = str.indexOf("Sp") != -1;
+			this.outputReceivedAt  = str.indexOf("R") != -1;
+			this.outputId          = str.indexOf("I") != -1;
+			this.outputFacility    = str.indexOf("F") != -1;
 		}
 		
 		public void printResult(long skipId, String outputDate, QueryResult result) {
@@ -275,17 +275,17 @@ public class PapertrailClient {
 		
 		private void printResult(Event event) {
 			StringBuilder buf = new StringBuilder();
+			if (outputGeneratedAt) {
+				buf.append(event.getGeneratedAt());
+			}
 			if (outputReceivedAt) {
-				buf.append(event.getReceivedAt());
+				buf.append(" ReceivedAt=").append(event.getReceivedAt());
 			}
 			if (outputId) {
 				buf.append(" Id=").append(event.getId());
 			}
 			if (outputSeverity) {
 				buf.append(" Severity=").append(event.getSeverity());
-			}
-			if (outputHostName) {
-				buf.append(" Host=").append(event.getHostName());
 			}
 			if (outputSourceName) {
 				buf.append(" SourceName=").append(event.getSourceName());

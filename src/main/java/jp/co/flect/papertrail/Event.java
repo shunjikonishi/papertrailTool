@@ -2,16 +2,16 @@ package jp.co.flect.papertrail;
 
 public class Event {
 	
-	private String severity;
-	private String hostname;
-	private String source_name;
-	private int source_id;
-	private String message;
-	private String program;
-	private String source_ip;
-	private String received_at;
 	private long id;
+	private String generated_at;
+	private String received_at;
+	private int source_id;
+	private String source_name;
+	private String source_ip;
 	private String facility;
+	private String severity;
+	private String program;
+	private String message;
 //	private String display_received_at;
 	
 	private HerokuAccessLog accessLog;
@@ -25,9 +25,6 @@ public class Event {
 	
 	public String getSeverity() { return this.severity;}
 	public void setSeverity(String s) { this.severity = s;}
-	
-	public String getHostName() { return this.hostname;}
-	public void setHostName(String s) { this.hostname = s;}
 	
 	public String getSourceName() { return this.source_name;}
 	public void setSourceName(String s) { this.source_name = s;}
@@ -44,6 +41,9 @@ public class Event {
 	public String getSourceIP() { return this.source_ip;}
 	public void setSourceIP(String s) { this.source_ip = s;}
 	
+	public String getGeneratedAt() { return this.generated_at;}
+	public void setGeneratedAt(String s) { this.generated_at = s;}
+	
 	public String getReceivedAt() { return this.received_at;}
 	public void setReceivedAt(String s) { this.received_at = s;}
 	
@@ -52,8 +52,6 @@ public class Event {
 	
 	public String getFacility() { return this.facility;}
 	public void setFacility(String s) { this.facility = s;}
-	
-//	public String getDisplayReceivedAt() { return this.display_received_at;}
 	
 	public boolean isAccessLog() {
 		return getAccessLog() != null;
@@ -75,17 +73,17 @@ public class Event {
 	}
 	
 	public Time getTime() {
-		if (this.time == null && this.received_at != null) {
-			this.time = Time.parse(this.received_at.substring(11, 19));
+		if (this.time == null && this.generated_at != null) {
+			this.time = Time.parse(this.generated_at.substring(11, 19));
 		}
 		return this.time;
 	}
 	
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
-		buf.append("Date=").append(this.received_at)
+		buf.append("GeneratedAt=").append(this.generated_at)
+			.append("ReceivedAt=").append(this.received_at)
 			.append(", Severity=").append(this.severity)
-			.append(", Host=").append(this.hostname)
 			.append(", SourceIP=").append(this.source_ip)
 			.append(", SourceName=").append(this.source_name)
 			.append(", Program=").append(this.program)
@@ -106,6 +104,7 @@ public class Event {
 		}
 		Event event = new Event(strs[9]);
 		event.setId(Long.parseLong(strs[0]));
+		event.setGeneratedAt(strs[1]);
 		event.setReceivedAt(strs[2]);
 		event.setSourceId(Integer.parseInt(strs[3]));
 		event.setSourceName(strs[4]);
