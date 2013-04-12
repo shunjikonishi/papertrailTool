@@ -31,6 +31,7 @@ import jp.co.flect.papertrail.counter.ServerErrorCounter;
 import jp.co.flect.papertrail.counter.SlowRequestCounter;
 import jp.co.flect.papertrail.counter.SlowConnectCounter;
 import jp.co.flect.papertrail.counter.ConnectTimeCounter;
+import jp.co.flect.papertrail.counter.PostgresDurationCounter;
 import jp.co.flect.papertrail.excel.ExcelWriter;
 
 public class LogAnalyzer {
@@ -209,6 +210,11 @@ public class LogAnalyzer {
 					}
 				}
 				return ret;
+			}
+		});
+		factoryMap.put("-ss", new CounterFactory(Resource.SLOW_SQL, 1) {
+			protected Counter doCreate(String[] args) {
+				return new PostgresDurationCounter(getName(args));
 			}
 		});
 		factoryMap.put("-rg", new CounterFactory(Resource.REGEX_GROUP, 2) {
@@ -409,18 +415,26 @@ public class LogAnalyzer {
 		if (is == null) {
 			return false;
 		}
+		analyzer.process(is);
+		return true;
+	}
+	
+	public void process(File f) throws IOException {
+		process(new FileInputStream(f));
+	}
+	
+	public void process(InputStream is) throws IOException {
 		BufferedReader r = new BufferedReader(new InputStreamReader(is, "utf-8"));
 		try {
 			String line = r.readLine();
 			while (line != null) {
 				Event event = Event.fromTsv(line);
-				analyzer.add(event);
+				add(event);
 				line = r.readLine();
 			}
 		} finally {
 			r.close();
 		}
-		return true;
 	}
 	
 	public static LogAnalyzer process(String[] args) throws IOException {

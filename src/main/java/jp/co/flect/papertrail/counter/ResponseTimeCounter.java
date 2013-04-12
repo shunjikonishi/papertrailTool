@@ -108,7 +108,11 @@ public class ResponseTimeCounter extends AbstractCounter implements Comparator<S
 			HerokuAccessLog log = e.getAccessLog();
 			if (log != null) {
 				NumberCounterItem item = getItem(e.getTime());
-				item.add(log.getService());
+				int n = log.getService();
+				if (n < 0) {
+					n = 0;
+				}
+				item.add(n);
 			}
 		}
 	}

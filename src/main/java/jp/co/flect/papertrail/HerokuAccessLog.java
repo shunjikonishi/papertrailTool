@@ -44,7 +44,7 @@ public class HerokuAccessLog {
 		this.status = parseInt(map.get("status"), false);
 		this.bytes = parseInt(map.get("bytes"), false);
 		
-		this.error = "error".equals(map.get("at"));
+		this.error = map.get("code") != null;
 	}
 	
 	private Map<String, String> toMap(String msg) {
@@ -62,14 +62,20 @@ public class HerokuAccessLog {
 			}
 			String name = msg.substring(idx, eq);
 			idx = eq + 1;
-			char vEnd = msg.charAt(idx) == '"' ? '"' : ' ';
+			
+			char c2 = msg.charAt(idx);
+			if (c2 == ' ') {
+				idx++;
+				continue;
+			}
+			char vEnd = c2 == '"' ? '"' : ' ';
 			int end = msg.indexOf(vEnd, idx + 1);
 			if (end == -1) {
 				return map;
 			}
 			String value = msg.substring(idx, end);
 			if (vEnd == '"') {
-				value = value.substring(1, value.length() - 1);
+				value = value.substring(1, value.length());
 			}
 			map.put(name, value);
 			idx = end + 1;
