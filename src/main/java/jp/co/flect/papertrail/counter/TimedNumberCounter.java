@@ -11,7 +11,7 @@ import jp.co.flect.papertrail.HerokuAccessLog;
 import jp.co.flect.papertrail.ProgramComparator;
 import java.math.BigInteger;
 
-public abstract class TimedNumberCounter extends AbstractCounter {
+public class TimedNumberCounter extends AbstractCounter {
 	
 	private List<NumberCounterItem> list = new ArrayList<NumberCounterItem>();
 	
@@ -23,6 +23,19 @@ public abstract class TimedNumberCounter extends AbstractCounter {
 	}
 	
 	public Type getType() { return Type.Time;}
+	
+	public boolean match(Event e) {
+		throw new UnsupportedOperationException("Override this method");
+	}
+	
+	public void add(Event e) {
+		throw new UnsupportedOperationException("Override this method");
+	}
+	
+	public void add(Event e, int num) {
+		NumberCounterItem item = getItem(e.getTime());
+		item.add(num);
+	}
 	
 	public NumberCounterItem getItem(Time time) {
 		return this.list.get(time.getHours());

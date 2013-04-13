@@ -13,11 +13,13 @@ public class RegexNumberCounter extends TimedNumberCounter {
 		this.pattern = Pattern.compile(regex);
 	}
 	
+	@Override
 	public boolean match(Event e) {
 		Matcher m = this.pattern.matcher(e.getMessage());
 		return m.find() && m.groupCount() > 0;
 	}
 	
+	@Override
 	public void add(Event e) {
 		Matcher m = this.pattern.matcher(e.getMessage());
 		if (m.find() && m.groupCount() > 0) {
