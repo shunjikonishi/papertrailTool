@@ -31,6 +31,7 @@ import jp.co.flect.papertrail.counter.ServerErrorCounter;
 import jp.co.flect.papertrail.counter.SlowRequestCounter;
 import jp.co.flect.papertrail.counter.SlowConnectCounter;
 import jp.co.flect.papertrail.counter.ConnectTimeCounter;
+import jp.co.flect.papertrail.counter.DynoBootTimeCounter;
 import jp.co.flect.papertrail.counter.PostgresDurationCounter;
 import jp.co.flect.papertrail.excel.ExcelWriter;
 
@@ -187,6 +188,11 @@ public class LogAnalyzer {
 				return new DynoStateChangedCounter(getName(args));
 			}
 		});
+		factoryMap.put("-dt", new CounterFactory(Resource.DYNO_BOOT, 1) {
+			protected Counter doCreate(String[] args) {
+				return new DynoBootTimeCounter(getName(args));
+			}
+		});
 		factoryMap.put("-pg", new CounterFactory(Resource.PROGRAM, 1) {
 			protected Counter doCreate(String[] args) {
 				return new ProgramCounter(getName(args));
@@ -337,6 +343,7 @@ public class LogAnalyzer {
 				this.allCounters.add(factoryMap.get("-he").create());
 				this.allCounters.add(factoryMap.get("-rt").create());
 				this.allCounters.add(factoryMap.get("-ct").create());
+				this.allCounters.add(factoryMap.get("-dt").create());
 				return nextCounter();
 			} else if (s.startsWith("-")) {
 				CounterFactory factory = factoryMap.get(s);

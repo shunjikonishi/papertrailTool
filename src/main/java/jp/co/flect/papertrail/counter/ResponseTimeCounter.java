@@ -17,7 +17,11 @@ public class ResponseTimeCounter extends TimedGroupCounter {
 	private boolean includeConnectTime = false;
 	
 	public ResponseTimeCounter(String name) {
-		super(name, Resource.ALL_ACCESS);
+		this(name, Resource.ALL_ACCESS);
+	}
+	
+	public ResponseTimeCounter(String name, String allName) {
+		super(name, allName);
 	}
 	
 	public boolean isIncludeConnectTime() { return this.includeConnectTime;}
@@ -31,7 +35,7 @@ public class ResponseTimeCounter extends TimedGroupCounter {
 		this.patternList.add(Pattern.compile(pattern));
 	}
 	
-	public void addExclucde(String pattern) {
+	public void addExclude(String pattern) {
 		this.excludeList.add(Pattern.compile(pattern));
 	}
 	

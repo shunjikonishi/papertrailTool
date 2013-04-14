@@ -14,7 +14,11 @@ public class PostgresDurationCounter extends TimedGroupCounter {
 	private int targetDuration = 0;
 	
 	public PostgresDurationCounter(String name) {
-		super(name, Resource.ALL_DURATION);
+		this(name, Resource.ALL_DURATION);
+	}
+	
+	public PostgresDurationCounter(String name, String allName) {
+		super(name, allName);
 	}
 	
 	public boolean isIncludeCopy() { return this.includeCopy;}

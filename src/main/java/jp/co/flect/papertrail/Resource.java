@@ -20,6 +20,7 @@ public class Resource {
 	public static final String PATTERN;
 	public static final String REGEX_NUMBER;
 	public static final String CONNECT_TIME;
+	public static final String DYNO_BOOT;
 	
 	public static final String ALL_ACCESS;
 	public static final String ALL_DURATION;
@@ -75,6 +76,9 @@ public class Resource {
 		CONNECT_TIME = b ? 
 			"接続時間" : 
 			"Connect time";
+		DYNO_BOOT = b ? 
+			"Dyno起動時間" : 
+			"Dyno boot time";
 		ALL_ACCESS = b ? 
 			"すべてのアクセス" : 
 			"All Access";

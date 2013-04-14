@@ -26,8 +26,7 @@ public class RegexNumberCounter extends TimedNumberCounter {
 			String group = m.group(1);
 			try {
 				int n = Integer.parseInt(group);
-				NumberCounterItem item = getItem(e.getTime());
-				item.add(n);
+				add(e, n);
 			} catch (NumberFormatException ex) {
 			}
 		}
