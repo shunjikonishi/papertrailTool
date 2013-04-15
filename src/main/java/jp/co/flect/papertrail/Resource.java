@@ -24,6 +24,7 @@ public class Resource {
 	
 	public static final String ALL_ACCESS;
 	public static final String ALL_DURATION;
+	public static final String OTHER;
 	
 	static {
 		boolean b = "ja".equals(Locale.getDefault().getLanguage());
@@ -85,5 +86,8 @@ public class Resource {
 		ALL_DURATION = b ? 
 			"すべての遅延SQL" : 
 			"All slow sql";
+		OTHER = b ? 
+			"その他" :
+			"Other";
 	}
 }

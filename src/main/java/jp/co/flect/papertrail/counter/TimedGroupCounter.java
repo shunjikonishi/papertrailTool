@@ -9,20 +9,30 @@ import java.util.Comparator;
 import jp.co.flect.papertrail.Counter;
 import jp.co.flect.papertrail.CounterRow;
 import jp.co.flect.papertrail.Event;
+import jp.co.flect.papertrail.Resource;
 
 public abstract class TimedGroupCounter extends AbstractCounter implements Comparator<String> {
 	
 	private String allName;
+	private String otherName;
 	private Map<String, TimedNumberCounter> map = new HashMap<String, TimedNumberCounter>();
+	private int maxGroup = 0;
 	
 	public TimedGroupCounter(String name, String allName) {
+		this(name, allName, Resource.OTHER);
+	}
+	public TimedGroupCounter(String name, String allName, String otherName) {
 		super(name);
 		this.allName = allName;
+		this.otherName = otherName;
 		TimedNumberCounter all = new TimedNumberCounter(allName);
 		this.map.put(allName, all);
 	}
 	
 	public Type getType() { return Type.Time;}
+	
+	public int getMaxGroup() { return this.maxGroup;}
+	public void setMaxGroup(int n) { this.maxGroup = n;}
 	
 	protected abstract String getGroupName(Event e);
 	protected abstract int getGroupNumber(Event e);
@@ -35,8 +45,18 @@ public abstract class TimedGroupCounter extends AbstractCounter implements Compa
 		}
 		TimedNumberCounter counter = this.map.get(name);
 		if (counter == null) {
-			counter = new TimedNumberCounter(name);
-			this.map.put(name, counter);
+			if (maxGroup > 0) {
+				if (map.size() == maxGroup - 1) {
+					counter = new TimedNumberCounter(otherName);
+					this.map.put(otherName, counter);
+				} else if (map.size() == maxGroup) {
+					counter = map.get(otherName);
+				}
+			}
+			if (counter == null) {
+				counter = new TimedNumberCounter(name);
+				this.map.put(name, counter);
+			}
 		}
 		counter.add(e, n);
 		this.map.get(this.allName).add(e, n);

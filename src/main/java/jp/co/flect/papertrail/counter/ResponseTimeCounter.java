@@ -24,6 +24,10 @@ public class ResponseTimeCounter extends TimedGroupCounter {
 		super(name, allName);
 	}
 	
+	public ResponseTimeCounter(String name, String allName, String otherName) {
+		super(name, allName, otherName);
+	}
+	
 	public boolean isIncludeConnectTime() { return this.includeConnectTime;}
 	public void setIncludeConnectTime(boolean b) { this.includeConnectTime = b;}
 	

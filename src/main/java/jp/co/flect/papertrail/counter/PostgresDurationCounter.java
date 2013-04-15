@@ -11,18 +11,26 @@ import java.text.ParseException;
 public class PostgresDurationCounter extends TimedGroupCounter {
 	
 	private boolean includeCopy = true;
+	private boolean packCopy = false;
 	private int targetDuration = 0;
 	
 	public PostgresDurationCounter(String name) {
-		this(name, Resource.ALL_DURATION);
+		super(name, Resource.ALL_DURATION);
 	}
 	
 	public PostgresDurationCounter(String name, String allName) {
 		super(name, allName);
 	}
 	
+	public PostgresDurationCounter(String name, String allName, String otherName) {
+		super(name, allName, otherName);
+	}
+	
 	public boolean isIncludeCopy() { return this.includeCopy;}
 	public void setIncludeCopy(boolean b) { this.includeCopy = b;}
+	
+	public boolean isPackCopy() { return this.packCopy;}
+	public void setPackCopy(boolean b) { this.packCopy = b;}
 	
 	public int getTargetDuration() { return this.targetDuration;}
 	public void setTargetDuration(int n) { this.targetDuration = n;}
@@ -37,9 +45,13 @@ public class PostgresDurationCounter extends TimedGroupCounter {
 	}
 	
 	private String normalize(String sql) {
+		if (this.packCopy && sql.indexOf("COPY ") != -1) {
+			return "COPY";
+		}
 		StringBuilder buf = new StringBuilder();
 		StringBuilder ret = new StringBuilder();
 		Tokenizer t = new Tokenizer(sql);
+		InState inState = new InState();
 		
 		boolean space = false;
 		int n = t.next(buf);
@@ -51,14 +63,19 @@ public class PostgresDurationCounter extends TimedGroupCounter {
 			{
 				ret.append(" ");
 			}
-			space = n != Tokenizer.T_OPEN_BRACKET;
-			if (n == Tokenizer.T_STRING ||
-			    n == Tokenizer.T_NUMBER ||
-			    n == Tokenizer.T_BOOLEAN) 
-			{
-				ret.append("?");
+			String s = buf.toString();
+			if (inState.getInState(n, s) != InState.IN_NEXT) {
+				if (n == Tokenizer.T_STRING ||
+				    n == Tokenizer.T_NUMBER ||
+				    n == Tokenizer.T_BOOLEAN) 
+				{
+					ret.append("?");
+				} else {
+					ret.append(s);
+				}
+				space = n != Tokenizer.T_OPEN_BRACKET;
 			} else {
-				ret.append(buf);
+				space = false;
 			}
 			n = t.next(buf);
 		}
@@ -96,6 +113,61 @@ public class PostgresDurationCounter extends TimedGroupCounter {
 			System.err.println(strNum);
 			ex.printStackTrace();
 			return -1;
+		}
+	}
+	
+	private static class InState {
+		
+		private static final int STATE_NONE      = 0;
+		private static final int STATE_IN_CLAUSE = 1;
+		private static final int STATE_IN_OPEN   = 2;
+		private static final int STATE_IN_IN     = 3;
+		
+		public static final int NOT_IN   = 0;
+		public static final int IN_FIRST = 1;
+		public static final int IN_NEXT  = 2;
+		
+		private int state = STATE_NONE;
+		
+		public int getInState(int kind, String s) {
+			switch (state) {
+				case STATE_NONE:
+					if (kind == Tokenizer.T_LITERAL && s.equalsIgnoreCase("in")) {
+						state = STATE_IN_CLAUSE;
+					}
+					return NOT_IN;
+				case STATE_IN_CLAUSE:
+					if (kind == Tokenizer.T_OPEN_BRACKET) {
+						state = STATE_IN_OPEN;
+					} else {
+						state = STATE_NONE;
+					}
+					return NOT_IN;
+				case STATE_IN_OPEN:
+					if (kind == Tokenizer.T_STRING ||
+					    kind == Tokenizer.T_NUMBER ||
+					    kind == Tokenizer.T_BOOLEAN ||
+					    kind == Tokenizer.T_COMMA)
+					{
+						state = STATE_IN_IN;
+						return IN_FIRST;
+					} else {
+						state = STATE_NONE;
+						return NOT_IN;
+					}
+				case STATE_IN_IN:
+					if (kind == Tokenizer.T_STRING ||
+					    kind == Tokenizer.T_NUMBER ||
+					    kind == Tokenizer.T_BOOLEAN ||
+					    kind == Tokenizer.T_COMMA)
+					{
+						return IN_NEXT;
+					} else {
+						state = STATE_NONE;
+						return NOT_IN;
+					}
+			}
+			throw new IllegalStateException();
 		}
 	}
 	
