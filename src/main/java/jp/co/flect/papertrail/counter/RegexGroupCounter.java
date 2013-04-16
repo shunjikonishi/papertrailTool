@@ -32,7 +32,7 @@ public class RegexGroupCounter extends AbstractCounter {
 	public void add(Event e) {
 		Matcher m = this.pattern.matcher(e.getMessage());
 		if (m.find()) {
-			String group = m.groupCount() > 0 ? m.group(1) : this.pattern.pattern();
+			String group = m.groupCount() > 0 ? m.group(1) : getName();
 			Counter counter = this.map.get(group);
 			if (counter == null) {
 				counter = new AllLogCounter(group);
@@ -54,6 +54,9 @@ public class RegexGroupCounter extends AbstractCounter {
 	}
 	
 	public String toString(String prefix, String delimita) {
+		if (this.map.size() == 1 && map.get(getName()) != null) {
+			return map.get(getName()).toString(prefix, delimita);
+		} 
 		StringBuilder buf = new StringBuilder();
 		buf.append(prefix).append(getName()).append("\n");
 		List<String> names = new ArrayList<String>(this.map.keySet());

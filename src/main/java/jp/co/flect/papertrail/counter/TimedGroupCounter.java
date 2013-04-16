@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.regex.Pattern;
 import jp.co.flect.papertrail.Counter;
 import jp.co.flect.papertrail.CounterRow;
 import jp.co.flect.papertrail.Event;
@@ -17,6 +18,9 @@ public abstract class TimedGroupCounter extends AbstractCounter implements Compa
 	private String otherName;
 	private Map<String, TimedNumberCounter> map = new HashMap<String, TimedNumberCounter>();
 	private int maxGroup = 0;
+	
+	private Map<String, Pattern> patternMap = new HashMap<String, Pattern>();
+	private List<Pattern> excludeList = new ArrayList<Pattern>();
 	
 	public TimedGroupCounter(String name, String allName) {
 		this(name, allName, Resource.OTHER);
@@ -36,6 +40,32 @@ public abstract class TimedGroupCounter extends AbstractCounter implements Compa
 	
 	protected abstract String getGroupName(Event e);
 	protected abstract int getGroupNumber(Event e);
+	
+	public void addPattern(String name, String pattern) {
+		this.patternMap.put(name, Pattern.compile(pattern));
+	}
+	
+	public void addExclude(String pattern) {
+		this.excludeList.add(Pattern.compile(pattern));
+	}
+	
+	protected String normalize(String path) {
+		for (Map.Entry<String, Pattern> entry : this.patternMap.entrySet()) {
+			if (entry.getValue().matcher(path).matches()) {
+				return entry.getKey();
+			}
+		}
+		return path;
+	}
+	
+	protected boolean isExclude(String path) {
+		for (Pattern p : excludeList) {
+			if (p.matcher(path).matches()) {
+				return true;
+			}
+		}
+		return false;
+	}
 	
 	public void add(Event e) {
 		String name = getGroupName(e);

@@ -212,7 +212,7 @@ public class LogAnalyzer {
 					if (nameFirst) {
 						nameFirst = false;
 					} else {
-						ret.addPattern(pattern);
+						ret.addPattern(pattern, pattern);
 					}
 				}
 				return ret;

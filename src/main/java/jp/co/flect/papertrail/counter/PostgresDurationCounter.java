@@ -44,7 +44,15 @@ public class PostgresDurationCounter extends TimedGroupCounter {
 		return ret;
 	}
 	
-	private String normalize(String sql) {
+	@Override
+	protected String normalize(String sql) {
+		String normalized = super.normalize(sql);
+		if (!normalized.equals(sql)) {
+			return normalized;
+		}
+		if (isExclude(sql)) {
+			return null;
+		}
 		if (this.packCopy && sql.indexOf("COPY ") != -1) {
 			return "COPY";
 		}
@@ -90,8 +98,7 @@ public class PostgresDurationCounter extends TimedGroupCounter {
 		if (idx1 == -1 || idx2 ==-1) {
 			return null;
 		}
-		String sql = msg.substring(idx2 + 1).trim();
-		return normalize(sql);
+		return normalize(msg.substring(idx2 + 1).trim());
 	}
 	
 	@Override
