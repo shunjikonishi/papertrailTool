@@ -67,7 +67,7 @@ public class S3Archive {
 	}
 	
 	public void saveToFile(String dateStr, boolean unzip, File file) throws IOException {
-		InputStream is = getDailyArchive(dateStr);
+		InputStream is = getDailyArchive(dateStr, unzip);
 		try {
 			OutputStream os = new FileOutputStream(file);
 			try {

@@ -3,6 +3,7 @@ package jp.co.flect.papertrail.counter;
 import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -19,7 +20,7 @@ public abstract class TimedGroupCounter extends AbstractCounter implements Compa
 	private Map<String, TimedNumberCounter> map = new HashMap<String, TimedNumberCounter>();
 	private int maxGroup = 0;
 	
-	private Map<String, Pattern> patternMap = new HashMap<String, Pattern>();
+	private Map<String, Pattern> patternMap = new LinkedHashMap<String, Pattern>();
 	private List<Pattern> excludeList = new ArrayList<Pattern>();
 	
 	public TimedGroupCounter(String name, String allName) {
@@ -120,6 +121,17 @@ public abstract class TimedGroupCounter extends AbstractCounter implements Compa
 		if (this.allName.equals(s1)) {
 			return -1;
 		} else if (this.allName.equals(s2)) {
+			return 1;
+		} else if (this.otherName.equals(s1)) {
+			return 1;
+		} else if (this.otherName.equals(s2)) {
+			return -1;
+		}
+		boolean p1 = patternMap.containsKey(s1);
+		boolean p2 = patternMap.containsKey(s2);
+		if (p1) {
+			return p2 ? s1.compareTo(s2) : -1;
+		} else if (p2) {
 			return 1;
 		}
 		return s1.compareTo(s2);
