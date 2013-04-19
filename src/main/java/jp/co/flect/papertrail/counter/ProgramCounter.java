@@ -27,6 +27,9 @@ public class ProgramCounter extends AbstractCounter {
 	
 	public void add(Event e) {
 		String pg = e.getProgram();
+		if (pg.startsWith("app/postgres.")) {
+			pg = "app/postgres";
+		}
 		Counter counter = this.map.get(pg);
 		if (counter == null) {
 			counter = new AllLogCounter(pg);
