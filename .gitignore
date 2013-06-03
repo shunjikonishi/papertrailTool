@@ -1,5 +1,1 @@
-*.jar
-*.war
-*.ear
-*.class
 target/
