@@ -6,7 +6,7 @@
 	
 	<groupId>jp.co.flect</groupId>
 	<artifactId>papertrailTool</artifactId>
-	<version>1.1-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>jar</packaging>
 	
 	<name>papertrailTool</name>
@@ -144,6 +144,30 @@
 				</executions>
 			</plugin>
 			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.4.3</version>
+				<executions>
+					<execution>
+					<id>copy-resources</id>
+					<phase>deploy</phase>
+					<goals>
+						<goal>copy-resources</goal>
+					</goals>
+					<configuration>
+						<outputDirectory>dist</outputDirectory>
+						<resources>
+							<resource>
+								<directory>target</directory>
+								<includes>
+									<include>*.jar</include>
+								</includes>
+							</resource>
+						</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
 				<groupId>com.github.github</groupId>
 				<artifactId>site-maven-plugin</artifactId>
 				<version>0.7</version>
@@ -153,7 +177,8 @@
 					<outputDirectory>${env.MAVEN_LOCAL_REPOSITORY}</outputDirectory>
 					<branch>refs/heads/gh-pages</branch>
 					<includes>
-						<include>**/*</include>
+						<include>jp/**/*</include>
+						<include>.nojekyll</include>
 					</includes>
 					<repositoryName>maven-repo</repositoryName>
 					<repositoryOwner>flect</repositoryOwner>
