@@ -100,6 +100,20 @@
 						</configuration>
 					</execution>
 					<execution>
+						<id>pt-m</id>
+						<phase>package</phase>
+						<goals><goal>assemble</goal></goals>
+						<configuration>
+							<assembleDirectory>target</assembleDirectory>
+							<programs>
+								<program>
+									<mainClass>jp.co.flect.papertrail.metrics.MultiLogMetrics</mainClass>
+									<name>pt-m</name>
+								</program>
+							</programs>
+						</configuration>
+					</execution>
+					<execution>
 						<id>pt-c</id>
 						<phase>package</phase>
 						<goals><goal>assemble</goal></goals>
