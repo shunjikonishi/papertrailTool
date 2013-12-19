@@ -1,20 +1,11 @@
 package jp.co.flect.papertrail.metrics;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import jp.co.flect.papertrail.Event;
 
-public class LogMetrics implements Cloneable {
+public class LogMetrics {
 	
 	public static final String HEROKU_LOAD_AVG_1M    = "load_avg_1m";
 	public static final String HEROKU_LOAD_AVG_5M    = "load_avg_5m";
@@ -27,7 +18,6 @@ public class LogMetrics implements Cloneable {
 	public static final String HEROKU_MEMORY_PGPGIN  = "memory_pgpgin";
 	
 	private List<String> targetList = new ArrayList<String>();
-	private List<Metrics> metricsList = new ArrayList<Metrics>();
 	
 	public void addTarget(String str) {
 		if (!targetList.contains(str)) {
@@ -36,18 +26,6 @@ public class LogMetrics implements Cloneable {
 	}
 	
 	public List<String> getTargetList() { return this.targetList;}
-	public List<Metrics> getMetricsList() { return this.metricsList;}
-	
-	public LogMetrics clone() {
-		try {
-			LogMetrics ret = (LogMetrics)super.clone();
-			ret.targetList = new ArrayList<String>(this.targetList);
-			ret.metricsList = new ArrayList<Metrics>();
-			return ret;
-		} catch (CloneNotSupportedException e) {
-			throw new IllegalStateException(e);
-		}
-	}
 	
 	public void addHerokuCpuMetrics() {
 		addTarget(HEROKU_LOAD_AVG_1M);
@@ -64,7 +42,7 @@ public class LogMetrics implements Cloneable {
 		addTarget(HEROKU_MEMORY_PGPGIN);
 	}
 	
-	public void addAllMetrics() {
+	public void addAllHerokuMetrics() {
 		addHerokuCpuMetrics();
 		addHerokuMemoryMetrics();
 	}
@@ -94,9 +72,9 @@ public class LogMetrics implements Cloneable {
 		return false;
 	}
 	
-	public boolean process(Event event) {
+	public Result process(Event event) {
 		String msg = event.getMessage();
-		Metrics m = new Metrics(event.getGeneratedAt(), this.targetList.size());
+		Result m = new Result(event.getGeneratedAt(), this.targetList.size());
 		for (int i=0; i<this.targetList.size(); i++) {
 			String target = this.targetList.get(i) + "=";
 			int idx = msg.indexOf(target);
@@ -105,61 +83,24 @@ public class LogMetrics implements Cloneable {
 				m.setValue(i, n);
 			}
 		}
-		boolean ret = m.hasValue();
-		if (ret) {
-			metricsList.add(m);
-		}
-		return ret;
+		return m.hasValue() ? m : null;
 	}
 	
-	public List<Metrics> process(File f) throws IOException {
-		return process(new FileInputStream(f));
-	}
-	
-	public List<Metrics>  process(InputStream is) throws IOException {
-		this.metricsList.clear();
-		
-		BufferedReader r = new BufferedReader(new InputStreamReader(is, "utf-8"));
-		try {
-			String line = r.readLine();
-			while (line != null) {
-				Event event = Event.fromTsv(line);
-				process(event);
-				line = r.readLine();
-			}
-		} finally {
-			r.close();
-		}
-		return this.metricsList;
-	}
-	
-	public void printTable(PrintStream out, String caption) {
-		out.println("<table border='1'>");
-		if (caption != null) {
-			out.println("<caption>" + caption + "</caption>");
-		}
-		out.print("<thead><tr><th>Time</th>");
-		for (String target : this.targetList) {
-			out.print("<th>" + target + "</th>");
-		}
-		out.println("</tr></thead><tbody>");
-		for (Metrics m : this.metricsList) {
-			out.println(m.toTableRow());
-		}
-		out.println("</tbody></table>");
-	}
-	
-	public static class Metrics {
+	public class Result {
 		
 		private String time;
 		private BigDecimal[] values;
 		
-		public Metrics(String time, int cnt) {
+		public Result(String time, int cnt) {
 			this.time = time;
 			this.values = new BigDecimal[cnt];
 		}
 		
 		public String getTime() { return this.time;}
+		
+		public int getKeyCount() { return values.length;}
+		public String getKey(int idx) { return LogMetrics.this.targetList.get(idx);}
+		
 		public BigDecimal getValue(int idx) { return this.values[idx];}
 		public void setValue(int idx, BigDecimal n) { this.values[idx] = n;}
 		
@@ -180,18 +121,20 @@ public class LogMetrics implements Cloneable {
 			return buf.toString();
 		}
 		
-		public String toCsv() {
+		public String toString() {
+			return toString(",");
+		}
+		
+		public String toString(String delimita) {
 			StringBuilder buf = new StringBuilder();
 			buf.append(time);
 			for (BigDecimal n : this.values) {
-				buf.append(",");
+				buf.append(delimita);
 				if (n != null) {
 					buf.append(n.toString());
 				}
 			}
 			return buf.toString();
 		}
-		
-		public String toString() { return toTableRow();}
 	}
 }
