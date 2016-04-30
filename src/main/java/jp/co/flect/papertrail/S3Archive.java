@@ -3,6 +3,7 @@ package jp.co.flect.papertrail;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -22,6 +23,15 @@ public class S3Archive {
 	private String secretKey;
 	private String bucket;
 	private String directory;
+
+	private AmazonS3Client client = null;
+
+	private AmazonS3Client getClient() {
+		if (client == null) {
+			client = new AmazonS3Client(new BasicAWSCredentials(this.accessKey, this.secretKey));
+		}
+		return client;
+	}
 	
 	public S3Archive(String accessKey, String secretKey, String bucket) {
 		this(accessKey, secretKey, bucket, "papertrail/logs");
@@ -34,10 +44,14 @@ public class S3Archive {
 		this.directory = directory;
 	}
 	
-	private String getLogPath(String dateStr) {
+	private String getDailyLogPath(String dateStr) {
 		return directory + "/dt=" + dateStr + "/" + dateStr + ".tsv.gz";
 	}
 	
+	private String getHourlyLogPath(String dateStr, int hour) {
+		String hourStr = hour > 9 ? Integer.toString(hour) : "0" + hour;
+		return directory + "/dt=" + dateStr + "/" + dateStr + "-" + hourStr + ".tsv.gz";
+	}
 	public InputStream getDailyArchive(Date date) throws IOException {
 		return getDailyArchive(date, true);
 	}
@@ -52,8 +66,32 @@ public class S3Archive {
 	}
 	
 	public InputStream getDailyArchive(String dateStr, boolean unzip) throws IOException {
-		AmazonS3Client client = new AmazonS3Client(new BasicAWSCredentials(this.accessKey, this.secretKey));
-		GetObjectRequest request = new GetObjectRequest(this.bucket, getLogPath(dateStr));
+		AmazonS3Client client = getClient();
+		GetObjectRequest request = new GetObjectRequest(this.bucket, getDailyLogPath(dateStr));
+		InputStream is = client.getObject(request).getObjectContent();
+		if (unzip) {
+			return new GZIPInputStream(is);
+		}
+		return is;
+	}
+
+	public InputStream getHourlyArchive(Date date) throws IOException {
+		return getHourlyArchive(date, true);
+	}
+
+	public InputStream getHourlyArchive(Date date, boolean unzip) throws IOException {
+		String dateStr = new SimpleDateFormat(DATE_FORMAT).format(date);
+		int hour = Integer.parseInt(new SimpleDateFormat("HH").format(date));
+		return getHourlyArchive(dateStr, hour, true);
+	}
+
+	public InputStream getHourlyArchive(String dateStr, int hour) throws IOException {
+		return getHourlyArchive(dateStr, hour, true);
+	}
+	
+	public InputStream getHourlyArchive(String dateStr, int hour, boolean unzip) throws IOException {
+		AmazonS3Client client = getClient();
+		GetObjectRequest request = new GetObjectRequest(this.bucket, getHourlyLogPath(dateStr, hour));
 		InputStream is = client.getObject(request).getObjectContent();
 		if (unzip) {
 			return new GZIPInputStream(is);
@@ -67,6 +105,14 @@ public class S3Archive {
 	}
 	
 	public void saveToFile(String dateStr, boolean unzip, File file) throws IOException {
+		try {
+			saveToFileForDaily(dateStr, unzip, file);
+		} catch (AmazonS3Exception e) {
+			saveToFileForHourly(dateStr, unzip, file);
+		}
+	}
+
+	private void saveToFileForDaily(String dateStr, boolean unzip, File file) throws IOException {
 		InputStream is = getDailyArchive(dateStr, unzip);
 		try {
 			OutputStream os = new FileOutputStream(file);
@@ -85,6 +131,27 @@ public class S3Archive {
 		}
 	}
 	
+	private void saveToFileForHourly(String dateStr, boolean unzip, File file) throws IOException {
+		OutputStream os = new FileOutputStream(file);
+		try {
+			byte[] buf = new byte[4096];
+			for (int i=0; i<24; i++) {
+				InputStream is = getHourlyArchive(dateStr, i, unzip);
+				try {
+					int n = is.read(buf, 0, buf.length);
+					while (n > 0) {
+						os.write(buf, 0, n);
+						n = is.read(buf, 0, buf.length);
+					}
+				} finally {
+					is.close();
+				}
+			}
+		} finally {
+			os.close();
+		}
+	}
+
 	public static String getDateStr(String s) {
 		Calendar cal = Calendar.getInstance();
 		String[] strs = s.split("-");
