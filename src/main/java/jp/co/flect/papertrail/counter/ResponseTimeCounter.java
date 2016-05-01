@@ -42,7 +42,7 @@ public class ResponseTimeCounter extends TimedGroupCounter {
 		if (isExclude(path)) {
 			return null;
 		}
-		return normalize(path);
+		return "[" + log.getMethod() + "] " + normalize(path);
 	}
 	
 	@Override
