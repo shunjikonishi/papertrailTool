@@ -1,5 +1,6 @@
 package jp.co.flect.papertrail.counter;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import jp.co.flect.papertrail.Time;
@@ -74,12 +75,12 @@ public abstract class TimedCounter extends AbstractCounter {
 			.append(getName())
 			.append(delimita);
 		for (int i=0; i<row.getItemCount(); i++) {
-			long[] nums = row.getItem(i).getNumbers();
+			BigDecimal[] nums = row.getItem(i).getNumbers();
 			for (int j=0; j<nums.length; j++) {
 				buf.append(nums[j]).append(delimita);
 			}
 		}
-		long[] nums = row.getSummaryItem().getNumbers();
+		BigDecimal[] nums = row.getSummaryItem().getNumbers();
 		buf.append(nums[0]).append(delimita)
 			.append(nums[1]).append(delimita)
 			.append(nums[2]);
@@ -109,11 +110,11 @@ public abstract class TimedCounter extends AbstractCounter {
 		public long getMaxOfMinute() { return this.maxOfMinute;}
 		public long getMaxOfSecond() { return this.maxOfSecond;}
 		
-		public long[] getNumbers() {
-			long[] ret = new long[3];
-			ret[0] = getCount();
-			ret[1] = getMaxOfMinute();
-			ret[2] = getMaxOfSecond();
+		public BigDecimal[] getNumbers() {
+			BigDecimal[] ret = new BigDecimal[3];
+			ret[0] = new BigDecimal(getCount());
+			ret[1] = new BigDecimal(getMaxOfMinute());
+			ret[2] = new BigDecimal(getMaxOfSecond());
 			return ret;
 		}
 	}

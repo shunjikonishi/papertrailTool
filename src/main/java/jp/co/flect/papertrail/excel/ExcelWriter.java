@@ -1,5 +1,6 @@
 package jp.co.flect.papertrail.excel;
 
+import java.math.BigDecimal;
 import java.io.File;
 import java.io.IOException;
 import java.io.FileInputStream;
@@ -89,16 +90,16 @@ public class ExcelWriter {
 		cell.setCellValue(prefix + items.getName());
 		for (int i=0; i<items.getItemCount(); i++) {
 			CounterItem item = items.getItem(i);
-			long[] nums = item.getNumbers();
+			BigDecimal[] nums = item.getNumbers();
 			for (int j=0; j<nums.length; j++) {
 				cell = createCell(row, colIndex++);
-				cell.setCellValue(nums[j]);
+				cell.setCellValue(nums[j].doubleValue());
 			}
 		}
-		long[] nums = items.getSummaryItem().getNumbers();
+		BigDecimal[] nums = items.getSummaryItem().getNumbers();
 		for (int j=0; j<nums.length; j++) {
 			cell = createCell(row, colIndex++);
-			cell.setCellValue(nums[j]);
+			cell.setCellValue(nums[j].doubleValue());
 		}
 	}
 	

@@ -1,5 +1,6 @@
 package jp.co.flect.papertrail.counter;
 
+import java.math.BigDecimal;
 import java.util.LinkedList;
 import jp.co.flect.papertrail.Event;
 
@@ -33,7 +34,7 @@ public abstract class PairNumberCounter extends TimedNumberCounter {
 				return;
 			}
 			int n = e.getTime().getTime() - start.getTime().getTime();
-			add(e, n);
+			add(e, new BigDecimal(n));
 		}
 	}
 	

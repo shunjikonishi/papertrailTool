@@ -9,7 +9,7 @@ import jp.co.flect.papertrail.Event;
 import jp.co.flect.papertrail.Time;
 import jp.co.flect.papertrail.HerokuAccessLog;
 import jp.co.flect.papertrail.ProgramComparator;
-import java.math.BigInteger;
+import java.math.BigDecimal;
 
 public class TimedNumberCounter extends AbstractCounter {
 	
@@ -32,7 +32,7 @@ public class TimedNumberCounter extends AbstractCounter {
 		throw new UnsupportedOperationException("Override this method");
 	}
 	
-	public void add(Event e, int num) {
+	public void add(Event e, BigDecimal num) {
 		NumberCounterItem item = getItem(e.getTime());
 		item.add(num);
 	}
@@ -43,29 +43,19 @@ public class TimedNumberCounter extends AbstractCounter {
 	
 	public List<CounterRow> getData() {
 		CounterItem[] items = new CounterItem[this.list.size()];
-		long cnt = 0;
-		int max = 0;
-		BigInteger sum = BigInteger.ZERO;
+		BigDecimal cnt = BigDecimal.ZERO;
+		BigDecimal max = BigDecimal.ZERO;
+		BigDecimal sum = BigDecimal.ZERO;
 		for (int i=0; i<this.list.size(); i++) {
 			NumberCounterItem item = this.list.get(i);
 			items[i] = item;
-			cnt += item.getCount();
-			if (item.getMax() > max) {
+			cnt = cnt.add(new BigDecimal(item.getCount()));
+			if (max.compareTo(item.getMax()) < 0) {
 				max = item.getMax();
 			}
-			sum = sum.add(BigInteger.valueOf(item.getSum()));
+			sum = sum.add(item.getSum());
 		}
-		final long finalMax = max;
-		final long finalAvg = cnt == 0 ? 0 : sum.divide(BigInteger.valueOf(cnt)).longValue();
-		CounterItem summaryItem = new CounterItem(cnt) {
-			public long[] getNumbers() {
-				long[] ret = new long[3];
-				ret[0] = getCount();
-				ret[1] = finalMax;
-				ret[2] = finalAvg;
-				return ret;
-			}
-		};
+		CounterItem summaryItem = new NumberCounterItem(cnt.longValue(), max, sum);
 		ArrayList<CounterRow> ret = new ArrayList<CounterRow>();
 		ret.add(new CounterRow(getName(), items, summaryItem));
 		return ret;
@@ -78,12 +68,12 @@ public class TimedNumberCounter extends AbstractCounter {
 			.append(getName())
 			.append(delimita);
 		for (int i=0; i<row.getItemCount(); i++) {
-			long[] nums = row.getItem(i).getNumbers();
+			BigDecimal[] nums = row.getItem(i).getNumbers();
 			for (int j=0; j<nums.length; j++) {
 				buf.append(nums[j]).append(delimita);
 			}
 		}
-		long[] nums = row.getSummaryItem().getNumbers();
+		BigDecimal[] nums = row.getSummaryItem().getNumbers();
 		buf.append(nums[0]).append(delimita)
 			.append(nums[1]).append(delimita)
 			.append(nums[2]);
@@ -92,24 +82,36 @@ public class TimedNumberCounter extends AbstractCounter {
 	
 	public static class NumberCounterItem extends CounterItem {
 		
-		private int max;
-		private long sum;
+		private BigDecimal max = BigDecimal.ZERO;
+		private BigDecimal sum = BigDecimal.ZERO;
 		
-		public int getMax() { return this.max;}
-		public long getSum() { return this.sum;}
-		public int getAverage() { return getCount() == 0 ? 0 : (int)(this.sum / getCount());}
+		public NumberCounterItem() {
+			super();
+		}
+
+		public NumberCounterItem(long count, BigDecimal max, BigDecimal sum) {
+			super(count);
+			this.max = max;
+			this.sum = sum;
+		}
+
+		public BigDecimal getMax() { return this.max;}
+		public BigDecimal getSum() { return this.sum;}
+		public BigDecimal getAverage() { 
+			return getCount() == 0 ? BigDecimal.ZERO : this.sum.divide(new BigDecimal(getCount()), BigDecimal.ROUND_HALF_UP);
+		}
 		
-		public void add(int time) {
+		public void add(BigDecimal num) {
 			countUp();
-			this.sum += time;
-			if (this.max < time) {
-				this.max = time;
+			this.sum = this.sum.add(num);
+			if (this.max.compareTo(num) < 0) {
+				this.max = num;
 			}
 		}
 		
-		public long[] getNumbers() {
-			long[] ret = new long[3];
-			ret[0] = getCount();
+		public BigDecimal[] getNumbers() {
+			BigDecimal[] ret = new BigDecimal[3];
+			ret[0] = new BigDecimal(getCount());
 			ret[1] = getMax();
 			ret[2] = getAverage();
 			return ret;

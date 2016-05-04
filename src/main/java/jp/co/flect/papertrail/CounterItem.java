@@ -1,5 +1,7 @@
 package jp.co.flect.papertrail;
 
+import java.math.BigDecimal;
+
 public abstract class CounterItem {
 	
 	private long count;
@@ -16,5 +18,5 @@ public abstract class CounterItem {
 	public void countUp() { this.count++;}
 	
 	
-	public abstract long[] getNumbers();
+	public abstract BigDecimal[] getNumbers();
 }

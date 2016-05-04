@@ -1,5 +1,6 @@
 package jp.co.flect.papertrail.counter;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
@@ -89,8 +90,9 @@ public abstract class TimedGroupCounter extends AbstractCounter implements Compa
 				this.map.put(name, counter);
 			}
 		}
-		counter.add(e, n);
-		this.map.get(this.allName).add(e, n);
+		BigDecimal num = new BigDecimal(n);
+		counter.add(e, num);
+		this.map.get(this.allName).add(e, num);
 	}
 	
 	public List<CounterRow> getData() {

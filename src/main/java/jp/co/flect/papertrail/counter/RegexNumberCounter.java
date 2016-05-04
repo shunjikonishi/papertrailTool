@@ -1,5 +1,6 @@
 package jp.co.flect.papertrail.counter;
 
+import java.math.BigDecimal;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import jp.co.flect.papertrail.Event;
@@ -22,10 +23,13 @@ public class RegexNumberCounter extends TimedNumberCounter {
 	@Override
 	public void add(Event e) {
 		Matcher m = this.pattern.matcher(e.getMessage());
-		if (m.find() && m.groupCount() > 0) {
+		m.matches();
+		boolean bFind = m.find();
+		int groupCount = m.groupCount();
+		if (bFind && groupCount > 0) {
 			String group = m.group(1);
 			try {
-				int n = Integer.parseInt(group);
+				BigDecimal n = new BigDecimal(group);
 				add(e, n);
 			} catch (NumberFormatException ex) {
 			}

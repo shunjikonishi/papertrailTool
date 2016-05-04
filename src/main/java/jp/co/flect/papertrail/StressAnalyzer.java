@@ -1,5 +1,6 @@
 package jp.co.flect.papertrail;
 
+import java.math.BigDecimal;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -119,7 +120,7 @@ public class StressAnalyzer {
 	}
 	
 	private void addNumbers(StringBuilder buf, Item item) {
-		for (long n : item.getNumbers()) {
+		for (BigDecimal n : item.getNumbers()) {
 			buf.append(",").append(n);
 		}
 	}
@@ -129,7 +130,7 @@ public class StressAnalyzer {
 		private Map<Integer, Integer> statusMap = new HashMap<Integer, Integer>();
 		
 		public void add(HerokuAccessLog log) {
-			super.add(log.getService());
+			super.add(new BigDecimal(log.getService()));
 			int status = log.getStatus();
 			Integer n = statusMap.get(status);
 			if (n == null) {
@@ -142,15 +143,15 @@ public class StressAnalyzer {
 		}
 		
 		@Override
-		public long[] getNumbers() {
-			long[] ret = new long[3 + statusSet.size()];
-			ret[0] = getCount();
+		public BigDecimal[] getNumbers() {
+			BigDecimal[] ret = new BigDecimal[3 + statusSet.size()];
+			ret[0] = new BigDecimal(getCount());
 			ret[1] = getMax();
 			ret[2] = getAverage();
 			int idx = 3;
 			for (Integer status : statusSet) {
 				Integer n = statusMap.get(status);
-				ret[idx++] = n == null ? 0 : n.intValue();
+				ret[idx++] = n == null ? BigDecimal.ZERO : new BigDecimal(n);
 			}
 			return ret;
 		}
